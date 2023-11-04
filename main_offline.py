@@ -1,22 +1,24 @@
-# Import TF and TF Hub libraries.
+# Import TF.
 import tensorflow as tf
-import tensorflow_hub as hub
 
 import cv2
 import time
 import numpy as np
 import argparse
 
-# Download the model from TF Hub. (Pose Estimation)
-model = hub.load('https://tfhub.dev/google/movenet/singlepose/lightning/4')
-movenet = model.signatures['serving_default']
+# Pose Estimation
+interpreter_estimation = tf.lite.Interpreter(model_path='models/movenet_singlepose_lightning_tflite_int8_4.tflite')
+interpreter_estimation.allocate_tensors()
+
+input_tensor_estimation = interpreter_estimation.get_input_details()[0]['index']
+output_tensor_estimation = interpreter_estimation.get_output_details()[0]['index']
 
 # Pose Classification
-interpreter = tf.lite.Interpreter(model_path='Models/pose_classifier.tflite')
-interpreter.allocate_tensors()
+interpreter_classification = tf.lite.Interpreter(model_path='Models/pose_classifier.tflite')
+interpreter_classification.allocate_tensors()
 
-input_tensor = interpreter.get_input_details()[0]['index']
-output_tensor = interpreter.get_output_details()[0]['index']
+input_tensor_classification = interpreter_classification.get_input_details()[0]['index']
+output_tensor_classifiaction = interpreter_classification.get_output_details()[0]['index']
 
 # Read Labels
 with open('models/pose_labels.txt', "r") as file:
@@ -63,14 +65,13 @@ if __name__ == '__main__':
         image = tf.cast(tf_img, dtype=tf.int32)
 
         # Run model inference.
-        outputs = movenet(image)
-        # Output is a [1, 1, 17, 3] tensor.
-        keypoints = outputs['output_0']
+        image = tf.cast(image, dtype=tf.uint8)
+        interpreter_estimation.set_tensor(input_tensor_estimation, image)
+        interpreter_estimation.invoke()
+        keypoints = interpreter_estimation.get_tensor(output_tensor_estimation)
 
         # iterate through keypoints
         for k in keypoints[0, 0, :, :]:
-            # Converts to numpy array
-            k = k.numpy()
 
             # Checks confidence for keypoint
             if k[2] > threshold:
@@ -82,13 +83,14 @@ if __name__ == '__main__':
                 img = cv2.circle(img, (xc, yc), 2, (0, 255, 0), 5)
 
         # Pose Classification
-        reshaped_array = keypoints[0][0].numpy().reshape((1, 51))
-        interpreter.set_tensor(input_tensor, reshaped_array)
-        interpreter.invoke()
-        output_data = interpreter.get_tensor(output_tensor)
+        reshaped_array = keypoints[0][0].reshape((1, 51))
+        interpreter_classification.set_tensor(input_tensor_classification, reshaped_array)
+        interpreter_classification.invoke()
+        output_data = interpreter_classification.get_tensor(output_tensor_classifiaction)
+
         output_label = max(output_data[0])
         output_label = output_data[0].tolist().index(output_label)
-        print(labels[output_label], max(output_data[0]))
+        # print(labels[output_label], max(output_data[0]))
 
         img = cv2.putText(img, 'Class : %s  /  Score : %f' % (labels[output_label], max(output_data[0])), (10, 40), cv2.FONT_HERSHEY_COMPLEX,0.5, (0, 0, 0), 1)
         if not (time.time() - fps_time) == 0:
