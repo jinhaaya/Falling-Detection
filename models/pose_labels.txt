@@ -1,5 +1,4 @@
-chair
-cobra
-dog
-tree
-warrior
+kneeling
+lying
+sitting
+upright

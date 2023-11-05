@@ -61,11 +61,8 @@ if __name__ == '__main__':
         tf_img = np.asarray(tf_img)
         tf_img = np.expand_dims(tf_img, axis=0)
 
-        # Resize and pad the image to keep the aspect ratio and fit the expected size.
-        image = tf.cast(tf_img, dtype=tf.int32)
-
         # Run model inference.
-        image = tf.cast(image, dtype=tf.uint8)
+        image = tf.cast(tf_img, dtype=tf.uint8)
         interpreter_estimation.set_tensor(input_tensor_estimation, image)
         interpreter_estimation.invoke()
         keypoints = interpreter_estimation.get_tensor(output_tensor_estimation)
@@ -83,7 +80,11 @@ if __name__ == '__main__':
                 img = cv2.circle(img, (xc, yc), 2, (0, 255, 0), 5)
 
         # Pose Classification
+
         reshaped_array = keypoints[0][0].reshape((1, 51))
+        # reshaped_array = keypoints[0][0].T.ravel()
+        # print(type(reshaped_array))
+
         interpreter_classification.set_tensor(input_tensor_classification, reshaped_array)
         interpreter_classification.invoke()
         output_data = interpreter_classification.get_tensor(output_tensor_classifiaction)
