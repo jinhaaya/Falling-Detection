@@ -14,12 +14,16 @@ model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accur
 
 # Generate some example data (replace this with your actual data)
 import numpy as np
-X_train = np.random.rand(100, 17, 3)  # Replace with your input data
-y_train = keras.utils.to_categorical(np.random.randint(5, size=100), num_classes=5)  # Replace with your labels
+X_train = np.random.rand(10, 17, 3)  # Replace with your input data
+y_train = keras.utils.to_categorical(np.random.randint(5, size=10), num_classes=5)  # Replace with your labels
 
 # Train the model
 model.fit(X_train, y_train, epochs=10, batch_size=32)
 
+'''
 # Evaluate the model
 loss, accuracy = model.evaluate(X_test, y_test)  # Replace with your test data
 print(f"Test loss: {loss:.4f}, Test accuracy: {accuracy:.4f}")
+'''
+
+model.save("your_model.h5")
