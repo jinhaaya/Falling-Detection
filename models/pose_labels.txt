@@ -1,4 +1,2 @@
-kneeling
-lying
-sitting
-upright
+Fallen
+non-Fallen

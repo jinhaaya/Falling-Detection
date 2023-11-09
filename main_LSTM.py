@@ -8,15 +8,17 @@ import time
 import numpy as np
 import argparse
 
-# Download the model from TF Hub. (Pose Estimation)
-interpreter_estimation = tf.lite.Interpreter(model_path='models/movenet_singlepose_lightning_tflite_int8_4.tflite')
-interpreter_estimation.allocate_tensors()
 
-input_tensor_estimation = interpreter_estimation.get_input_details()[0]['index']
-output_tensor_estimation = interpreter_estimation.get_output_details()[0]['index']
+# Download the model from TF Hub. (Pose Estimation)
+model = hub.load('https://tfhub.dev/google/movenet/singlepose/lightning/4')
+movenet = model.signatures['serving_default']
 
 # Pose Classification
+interpreter = tf.lite.Interpreter(model_path='Models/pose_classifier.tflite')
+interpreter.allocate_tensors()
 
+input_tensor = interpreter.get_input_details()[0]['index']
+output_tensor = interpreter.get_output_details()[0]['index']
 # Load the saved model
 loaded_model = keras.models.load_model("your_model.h5")
 
@@ -56,6 +58,9 @@ if __name__ == '__main__':
     fps_time = time.time()
     f = 1
     temp_array = []
+
+    output_label = 1
+    output = [[0, 0]]
     while success:
         # A frame of video or an image, represented as an int32 tensor of shape: 256x256x3. Channels order: RGB with values in [0, 255].
         tf_img = cv2.resize(img, (192, 192))
@@ -67,14 +72,14 @@ if __name__ == '__main__':
         image = tf.cast(tf_img, dtype=tf.int32)
 
         # Run model inference.
-        image = tf.cast(tf_img, dtype=tf.uint8)
-        interpreter_estimation.set_tensor(input_tensor_estimation, image)
-        interpreter_estimation.invoke()
-        keypoints = interpreter_estimation.get_tensor(output_tensor_estimation)
+        outputs = movenet(image)
+        # Output is a [1, 1, 17, 3] tensor.
+        keypoints = outputs['output_0']
 
         # iterate through keypoints
         for k in keypoints[0, 0, :, :]:
             # Converts to numpy array
+            k = k.numpy()
 
             # Checks confidence for keypoint
             if k[2] > threshold:
@@ -85,22 +90,23 @@ if __name__ == '__main__':
                 # Draws a circle on the image for each keypoint
                 img = cv2.circle(img, (xc, yc), 2, (0, 255, 0), 5)
 
+
         # Pose Classification
-        if f != 11 :
-            temp_array.append(keypoints[0][0])
-        else:
-            temp_array = np.array(temp_array)
-            print(temp_array)
-            predictions = loaded_model.predict(temp_array)
-            temp_array = []
-            predicted_class = tf.argmax(predictions, axis=1)
-            print(predicted_class)
-            f = 0
-        f += 1
+        temp_array.append(keypoints[0][0].numpy())
+        if len(temp_array) == 30:
+            temp_array = temp_array[-20:]
+            temp_np_array = np.array([temp_array])
+            output = loaded_model.predict(temp_np_array,steps=1,verbose=0)
+            print(output[0])
+            output_label = max(output[0])
+            output_label = output[0].tolist().index(output_label)
 
-        # print(labels[output_label], max(output_data[0]))
-
-        # img = cv2.putText(img, 'Class : %s  /  Score : %f' % (labels[output_label], max(output_data[0])), (10, 40), cv2.FONT_HERSHEY_COMPLEX,0.5, (0, 0, 0), 1)
+        if output_label == 0:
+            img = cv2.putText(img, 'Class : %s  /  Score : %.2f' % (labels[output_label], max(output[0])), (10, 40),
+                              cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 0, 255), 2)
+        elif output_label == 1:
+            img = cv2.putText(img, 'Class : %s  /  Score : %.2f' % (labels[output_label], max(output[0])), (10, 40),
+                              cv2.FONT_HERSHEY_COMPLEX,0.5, (0, 0, 0), 1)
         if not (time.time() - fps_time) == 0:
             img = cv2.putText(img, 'FPS: %f' % (1.0 / (time.time() - fps_time)),
                                 (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
