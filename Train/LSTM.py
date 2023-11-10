@@ -38,7 +38,7 @@ if not args.load :
     X_fall_test = []
     y_fall_test = []
 
-    # falling
+    # falling_video
     fall_videos = []
     fall_filepath = ['dataset/fall/'+f'{i}' for i in range(1, 23)]
     for files in fall_filepath :
@@ -73,12 +73,41 @@ if not args.load :
 
         # Convert the list of frames to a NumPy array
         output_frames = np.array(output_frames)
-        # print(output_frames.shape)
         X.append(output_frames)
         y.append([1, 0]) # idx0 for falling, idx 1 for non-falling
 
     X_fall_train, X_temp, y_fall_train, y_temp = train_test_split(X, y, test_size=0.2, random_state=42)
     X_fall_val, X_fall_test, y_fall_val, y_fall_test = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42)
+
+
+    # falling_image
+    fall_videos = []
+    fall_filepath = ['dataset/fall_image/' + i for i in os.listdir('dataset/fall_image/')]
+
+    temp = []
+    for dir in tqdm(fall_filepath, desc="Data Processing for Falling Images"):
+        images = os.listdir(dir)
+        output_frames = []  # List to store selected frames
+        for image in images:
+            image = cv2.imread(dir + '/' + image)
+            frame = cv2.resize(image, (192, 192))
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            frame = np.asarray(frame)
+            frame = np.expand_dims(frame, axis=0)
+
+            # Resize and pad the image to keep the aspect ratio and fit the expected size.
+            frame = tf.cast(frame, dtype=tf.int32)
+            output = movenet(frame)['output_0']
+            output_frames.append(output[0][0])
+        cap.release()
+
+        # Convert the list of frames to a NumPy array
+        output_frames = np.array(output_frames)
+        X.append(output_frames)
+        y.append([1, 0]) # idx0 for falling, idx 1 for non-falling
+
+    X_fallimage_train, X_temp, y_fallimage_train, y_temp = train_test_split(X, y, test_size=0.2, random_state=42)
+    X_fallimage_val, X_fallimage_test, y_fallimage_val, y_fallimage_test = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42)
 
 
     # non-falling
@@ -130,21 +159,20 @@ if not args.load :
 
 
 
-    X_fall_train = np.array(X_fall_train);    X_nonfall_train = np.array(X_nonfall_train);
-    y_fall_train = np.array(y_fall_train);    y_nonfall_train = np.array(y_nonfall_train);
-    X_fall_val = np.array(X_fall_val);    X_nonfall_val = np.array(X_nonfall_val);
-    y_fall_val = np.array(y_fall_val);    y_nonfall_val = np.array(y_nonfall_val);
-    X_fall_test = np.array(X_fall_test);    X_nonfall_test = np.array(X_nonfall_test);
-    y_fall_test = np.array(y_fall_test);    y_nonfall_test = np.array(y_nonfall_test);
+    X_fall_train = np.array(X_fall_train);    X_fallimage_train = np.array(X_fallimage_train);    X_nonfall_train = np.array(X_nonfall_train);
+    y_fall_train = np.array(y_fall_train);    y_fallimage_train = np.array(y_fallimage_train);    y_nonfall_train = np.array(y_nonfall_train);
+    X_fall_val = np.array(X_fall_val);    X_fallimage_val = np.array(X_fallimage_val);    X_nonfall_val = np.array(X_nonfall_val);
+    y_fall_val = np.array(y_fall_val);    y_fallimage_val = np.array(y_fallimage_val);    y_nonfall_val = np.array(y_nonfall_val);
+    X_fall_test = np.array(X_fall_test);    X_fallimage_test = np.array(X_fallimage_test);    X_nonfall_test = np.array(X_nonfall_test);
+    y_fall_test = np.array(y_fall_test);    y_fallimage_test = np.array(y_fallimage_test);    y_nonfall_test = np.array(y_nonfall_test);
 
-    print(X_fall_train.shape, X_nonfall_train.shape, y_fall_train.shape, y_nonfall_train.shape)
+    X_train = np.append(X_fall_train, X_nonfall_train, axis=0);     X_train = np.append(X_train, X_fallimage_train, axis=0)
+    y_train = np.append(y_fall_train, y_nonfall_train, axis=0);     y_train = np.append(y_train, y_fallimage_train, axis=0)
+    X_val = np.append(X_fall_val, X_nonfall_val, axis=0);    X_val = np.append(X_val, X_fallimage_val, axis=0)
+    y_val = np.append(y_fall_val, y_nonfall_val, axis=0);    y_val = np.append(y_val, y_fallimage_val, axis=0)
+    X_test = np.append(X_fall_test, X_nonfall_test, axis=0);    X_test = np.append(X_test, X_fallimage_test, axis=0)
+    y_test = np.append(y_fall_test, y_nonfall_test, axis=0);    y_test = np.append(y_test, y_fallimage_test, axis=0)
 
-    X_train = np.append(X_fall_train, X_nonfall_train, axis=0)
-    y_train = np.append(y_fall_train, y_nonfall_train, axis=0)
-    X_val = np.append(X_fall_val, X_nonfall_val, axis=0)
-    y_val = np.append(y_fall_val, y_nonfall_val, axis=0)
-    X_test = np.append(X_fall_test, X_nonfall_test, axis=0)
-    y_test = np.append(y_fall_test, y_nonfall_test, axis=0)
     print(X_train.shape)
 
     # X_train = np.array(X_fall_train)
@@ -161,9 +189,9 @@ if not args.load :
         np.save('dataset/y_val', y_val)
         np.save('dataset/X_test', X_test)
         np.save('dataset/y_test', y_test)
-    print("Train Set :", len(X_fall_train), len(X_nonfall_train))
-    print("Validation Set :", len(X_fall_val), len(X_nonfall_val))
-    print("Test Set :", len(X_fall_test), len(X_nonfall_test))
+    print("Train Set :", len(X_fall_train)+len(X_fallimage_train), len(X_nonfall_train))
+    print("Validation Set :", len(X_fall_val)+len(X_fallimage_val), len(X_nonfall_val))
+    print("Test Set :", len(X_fall_test)+len(X_fallimage_test), len(X_nonfall_test))
 
     print("Data Processing Finished")
 

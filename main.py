@@ -83,7 +83,6 @@ if __name__ == '__main__':
 
         # Pose Classification
         reshaped_array = keypoints[0][0].numpy().reshape((1, 51))
-        # reshaped_array = keypoints[0][0].T.ravel()
         interpreter.set_tensor(input_tensor, reshaped_array)
         interpreter.invoke()
         output_data = interpreter.get_tensor(output_tensor)
