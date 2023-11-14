@@ -13,13 +13,7 @@ import argparse
 model = hub.load('https://tfhub.dev/google/movenet/singlepose/lightning/4')
 movenet = model.signatures['serving_default']
 
-# Pose Classification
-interpreter = tf.lite.Interpreter(model_path='Models/pose_classifier.tflite')
-interpreter.allocate_tensors()
-
-input_tensor = interpreter.get_input_details()[0]['index']
-output_tensor = interpreter.get_output_details()[0]['index']
-# Load the saved model
+# Pose Classification - Load the saved model
 loaded_model = keras.models.load_model("your_model.h5")
 
 # Read Labels
@@ -33,7 +27,7 @@ threshold = .3
 
 
 if __name__ == '__main__':
-    par = argparse.ArgumentParser(description='Human Fall Detection Demo.')
+    par = argparse.ArgumentParser(description='Human Fall Detection.')
     par.add_argument('-C', '--camera', default=0, # required=True, # default=2,
                      help='Source of camera or video file path.')
     args = par.parse_args()
