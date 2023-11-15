@@ -40,7 +40,7 @@ if not args.load :
 
     # falling_video
     fall_videos = []
-    fall_filepath = ['dataset/fall/'+f'{i}' for i in range(1, 23)]
+    fall_filepath = ['dataset/fall/'+i for i in os.listdir('dataset/fall')]
     for files in fall_filepath :
         temp = os.listdir(files)
         for t in temp:
@@ -59,7 +59,8 @@ if not args.load :
                 break  # Break the loop if we have reached the end of the video
             frame_count += 1
             # Save every 10th frame
-            if frame_count % 15 == 0 and len(output_frames) < 20:
+            fps = cap.get(cv2.CAP_PROP_FPS)
+            if frame_count % (fps//20) == 0 and len(output_frames) < 20:
                 frame = cv2.resize(frame, (192, 192))
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 frame = np.asarray(frame)
@@ -72,10 +73,12 @@ if not args.load :
         cap.release()
 
         # Convert the list of frames to a NumPy array
+        if len(output_frames) != 20 : continue
         output_frames = np.array(output_frames)
         X.append(output_frames)
         y.append([1, 0]) # idx0 for falling, idx 1 for non-falling
 
+    print(np.array(X).shape)
     X_fall_train, X_temp, y_fall_train, y_temp = train_test_split(X, y, test_size=0.2, random_state=42)
     X_fall_val, X_fall_test, y_fall_val, y_fall_test = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42)
 
@@ -102,10 +105,12 @@ if not args.load :
         cap.release()
 
         # Convert the list of frames to a NumPy array
+        if len(output_frames) != 20 : continue
         output_frames = np.array(output_frames)
         X.append(output_frames)
         y.append([1, 0]) # idx0 for falling, idx 1 for non-falling
 
+    print(np.array(X).shape)
     X_fallimage_train, X_temp, y_fallimage_train, y_temp = train_test_split(X, y, test_size=0.2, random_state=42)
     X_fallimage_val, X_fallimage_test, y_fallimage_val, y_fallimage_test = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42)
 
@@ -135,7 +140,7 @@ if not args.load :
                 break  # Break the loop if we have reached the end of the video
             frame_count += 1
             # Save every 10th frame
-            if frame_count % 5 == 0 and len(output_frames) < 20:
+            if frame_count % 20 == 0 and len(output_frames) < 20:
                 frame = cv2.resize(frame, (192, 192))
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 frame = np.asarray(frame)
@@ -154,6 +159,7 @@ if not args.load :
         X.append(output_frames)
         y.append([0, 1]) # idx0 for falling, idx 1 for non-falling
 
+    print(np.array(X).shape)
     X_nonfall_train, X_temp, y_nonfall_train, y_temp = train_test_split(X, y, test_size=0.2, random_state=42)
     X_nonfall_val, X_nonfall_test, y_nonfall_val, y_nonfall_test = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42)
 
