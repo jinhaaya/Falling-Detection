@@ -28,8 +28,10 @@ threshold = .3
 
 if __name__ == '__main__':
     par = argparse.ArgumentParser(description='Human Fall Detection.')
-    par.add_argument('-C', '--camera', default=0, # required=True, # default=2,
+    par.add_argument('-C', '--camera', default=0, # required=True,
                      help='Source of camera or video file path.')
+    par.add_argument('-V', '--visualize', default=False, # required=True,
+                     help='Visualize the output.')
     args = par.parse_args()
 
     # Loads video source (0 is for main webcam)
@@ -95,19 +97,25 @@ if __name__ == '__main__':
             output_label = max(output[0])
             output_label = output[0].tolist().index(output_label)
 
-        if output_label == 0:
-            img = cv2.putText(img, 'Class : %s  /  Score : %.2f' % (labels[output_label], max(output[0])), (10, 40),
-                              cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 0, 255), 2)
-        elif output_label == 1:
-            img = cv2.putText(img, 'Class : %s  /  Score : %.2f' % (labels[output_label], max(output[0])), (10, 40),
-                              cv2.FONT_HERSHEY_COMPLEX,0.5, (0, 0, 0), 1)
-        if not (time.time() - fps_time) == 0:
-            img = cv2.putText(img, 'FPS: %f' % (1.0 / (time.time() - fps_time)),
-                                (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
-        fps_time = time.time()
+        if args.visualize:
+            if output_label == 0:
+                img = cv2.putText(img, 'Class : %s  /  Score : %.2f' % (labels[output_label], max(output[0])), (10, 40),
+                                  cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 0, 255), 2)
+            elif output_label == 1:
+                img = cv2.putText(img, 'Class : %s  /  Score : %.2f' % (labels[output_label], max(output[0])), (10, 40),
+                                  cv2.FONT_HERSHEY_COMPLEX,0.5, (0, 0, 0), 1)
+            if not (time.time() - fps_time) == 0:
+                img = cv2.putText(img, 'FPS: %f' % (1.0 / (time.time() - fps_time)),
+                                    (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
+            # Shows image
+            cv2.imshow('frame', img)
+        else:
+            print("--------------------------------")
+            print(f"Result : {labels[output_label]}")
+            print(f"Score : {max(output[0])}")
+            print(f"FPS : {1.0 / (time.time() - fps_time)}")
 
-        # Shows image
-        cv2.imshow('frame', img)
+        fps_time = time.time()
         # Waits for the next frame, checks if q was pressed to quit
         if cv2.waitKey(1) == ord("q"):
             break
