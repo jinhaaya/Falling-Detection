@@ -129,6 +129,7 @@ if not args.load :
             non_fall_videos.append(filename)
 
     temp = []
+    flag = 0
     for video in tqdm(non_fall_videos, desc="Data Processing for non-Falling Videos"):
         cap = cv2.VideoCapture(video)
         # Initialize variables
@@ -140,7 +141,8 @@ if not args.load :
                 break  # Break the loop if we have reached the end of the video
             frame_count += 1
             # Save every 10th frame
-            if frame_count % 20 == 0 and len(output_frames) < 20:
+            fps = cap.get(cv2.CAP_PROP_FPS)
+            if frame_count % (fps//10) == 0 and len(output_frames) < 20:
                 frame = cv2.resize(frame, (192, 192))
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 frame = np.asarray(frame)
@@ -151,13 +153,17 @@ if not args.load :
                 output = movenet(frame)['output_0']
                 output_frames.append(output[0][0])
         cap.release()
-        if len(output_frames) != 20 : continue
+        if len(output_frames) != 20 :
+            print(len(output_frames))
+            flag += 1
+            continue
 
         # Convert the list of frames to a NumPy array
         # output_frames = np.array(output_frames)
         # print(output_frames.shape)
         X.append(output_frames)
         y.append([0, 1]) # idx0 for falling, idx 1 for non-falling
+    print(flag)
 
     print(np.array(X).shape)
     X_nonfall_train, X_temp, y_nonfall_train, y_temp = train_test_split(X, y, test_size=0.2, random_state=42)
