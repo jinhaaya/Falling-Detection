@@ -93,16 +93,17 @@ if __name__ == '__main__':
             temp_array = temp_array[-20:]
             temp_np_array = np.array([temp_array])
             output = loaded_model.predict(temp_np_array,steps=1,verbose=0)
-            print(output[0])
-            output_label = max(output[0])
-            output_label = output[0].tolist().index(output_label)
+            # print(output[0])
+
+            output_label = 0 if output[0][0] > 0.8 else 1
+            # output_label = output[0].tolist().index(output_label)
 
         if args.visualize:
             if output_label == 0:
-                img = cv2.putText(img, 'Class : %s  /  Score : %.2f' % (labels[output_label], max(output[0])), (10, 40),
+                img = cv2.putText(img, 'Class : %s  /  Score : %.2f' % (labels[output_label], output[0][0]), (10, 40),
                                   cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 0, 255), 2)
             elif output_label == 1:
-                img = cv2.putText(img, 'Class : %s  /  Score : %.2f' % (labels[output_label], max(output[0])), (10, 40),
+                img = cv2.putText(img, 'Class : %s  /  Score : %.2f' % (labels[output_label], output[0][1]), (10, 40),
                                   cv2.FONT_HERSHEY_COMPLEX,0.5, (0, 0, 0), 1)
             if not (time.time() - fps_time) == 0:
                 img = cv2.putText(img, 'FPS: %f' % (1.0 / (time.time() - fps_time)),
