@@ -2,6 +2,9 @@
 
 Falling Detection on RaspberryPi 4
 
+## Project Scenario
+![schema](readme/schema.png)
+
 
 ## Inference
 
@@ -9,9 +12,28 @@ Falling Detection on RaspberryPi 4
 git clone https://github.com/jinhaaya/Falling-Detection.git
 pip install Requirements.txt
 
-python main_LSTM.py -C 0 -V # for main camera
-python main_LSTM.py -C Sample_falling.mp4 -V # for local video
+python main_LSTM.py -C 0 -V True # for main camera
+python main_LSTM.py -C Sample_falling.mp4 -V True # for local video
+# Option C: Video input
+# Option V : Visualize the output
 ```
+
+
+## Result
+<img src="readme/non_fallen.png" width="300" height="250">
+<img src="readme/fallen.png" width="300" height="250">
+<br>
+         Fallen                   non_Fallen
+<br>
+<img src="readme/alert.png" width="200" height="420">
+<br>
+    alert image
+
+## CPU
+<img src="readme/cpu1.png" width="350" height="125">
+<img src="readme/cpu2.png" width="350" height="125">
+<br>
+<img src="readme/cpu3.png" width="600" height="400">
 
 
 ## Reference
