@@ -20,10 +20,9 @@ python main_LSTM.py -C Sample_falling.mp4 -V True # for local video
 
 
 ## Result
-<img src="readme/non_fallen.png" width="300" height="250">
-<img src="readme/fallen.png" width="300" height="250">
+<img src="readme/non_fallen.png" width="300" height="250"> <img src="readme/fallen.png" width="300" height="250">
 <br>
-         Fallen                   non_Fallen
+         Fallen                non_Fallen
 <br>
 <img src="readme/alert.png" width="200" height="420">
 <br>
